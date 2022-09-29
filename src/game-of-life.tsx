@@ -9,25 +9,20 @@ export type DeltaCoord = {
   name?: string;
 };
 
-export type Game = Cell[][];
+export type Cell = `${number}|${number}`;
 
-export type Cell = Alive | Dead;
-export type Alive = "▣";
-export type Dead = "□";
-
-export const alive: Alive = "▣";
-export const dead: Dead = "□";
+export type Cells = Set<Cell>;
 
 const GameOfLife = () => {
-  const game: Game = [
-    [alive, dead],
-    [dead, alive],
-  ];
+  //   const game: Game = [
+  //     [alive, dead],
+  //     [dead, alive],
+  //   ];
   return (
     <div>
-      {game.map((row) => {
+      {/* {game.map((row) => {
         return <div>{row.map((cell) => cell)}</div>;
-      })}
+      })} */}
     </div>
   );
 };

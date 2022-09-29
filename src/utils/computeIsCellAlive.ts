@@ -1,53 +1,60 @@
-import { alive, Coord, Game, DeltaCoord, Cell } from "../game-of-life";
+import { Coord, DeltaCoord, Cells, Cell } from "../game-of-life";
 
-const isCoord = (coord: Coord | null): coord is Coord => coord !== null;
-
-const computeIsCellAliveNextRound = (
-  currentCell: Cell,
+export const computeIsCellAliveNextRound = (
+  isCurrentCellAlive: boolean,
   aliveNeighbors: number
-) => aliveNeighbors === 3 || (currentCell === alive && aliveNeighbors === 2);
+) => aliveNeighbors === 3 || (isCurrentCellAlive && aliveNeighbors === 2);
+
+const deltas: DeltaCoord[] = [
+  { name: "Top left", dx: -1, dy: -1 },
+  { name: "Top", dx: -1, dy: 0 },
+  { name: "Top right", dx: -1, dy: 1 },
+  { name: "Left", dx: 0, dy: -1 },
+  { name: "Right", dx: 0, dy: 1 },
+  { name: "Bottom left", dx: 1, dy: -1 },
+  { name: "Bottom", dx: 1, dy: 0 },
+  { name: "Bottom right", dx: 1, dy: 1 },
+];
 
 const computeNeighborCoord =
-  (game: Game, cellCoord: Coord) =>
-  (delta: DeltaCoord): Coord | null => {
-    const neighborCoord: Coord = {
-      x: cellCoord.x + delta.dx,
-      y: cellCoord.y + delta.dy,
-    };
-    if (neighborCoord.x < 0 || neighborCoord.y < 0) return null;
-    if (neighborCoord.x >= game.length) return null;
-    if (neighborCoord.y >= game[0].length) return null;
+  (currentCell: Coord) =>
+  (delta: DeltaCoord): Coord => ({
+    x: currentCell.x + delta.dx,
+    y: currentCell.y + delta.dy,
+  });
 
-    return neighborCoord;
-  };
+//   .map<Cell>(({ x, y }) => `${x}|${y}`
 
-const isCellAlive = (game: Game) => (coord: Coord) =>
-  game[coord.x][coord.y] === alive;
+export const findCellNeighbors = (currentCell: Coord): Coord[] =>
+  deltas.map((delta) => computeNeighborCoord(currentCell)(delta));
 
-const findAliveNeighbors = (game: Game, cellCoord: Coord): number => {
-  const deltas: DeltaCoord[] = [
-    { name: "Top left", dx: -1, dy: -1 },
-    { name: "Top", dx: -1, dy: 0 },
-    { name: "Top right", dx: -1, dy: 1 },
-    { name: "Left", dx: 0, dy: -1 },
-    { name: "Right", dx: 0, dy: 1 },
-    { name: "Bottom left", dx: 1, dy: -1 },
-    { name: "Bottom", dx: 1, dy: 0 },
-    { name: "Bottom right", dx: 1, dy: 1 },
-  ];
-
-  return deltas
-    .map(computeNeighborCoord(game, cellCoord))
-    .filter(isCoord)
-    .filter(isCellAlive(game)).length;
+export const findAliveNeighborsAmount = (
+  currentCell: Coord,
+  aliveCells: Cells
+): number => {
+  const neighbors = findCellNeighbors(currentCell);
+  const aliveNeighbors = neighbors.filter(
+    ({ x, y }) => !!aliveCells.has(`${x}|${y}`)
+  );
+  return aliveNeighbors.length;
 };
 
-export const computeIsCellAlive = (game: Game, coord: Coord): boolean => {
-  let aliveNeighbors = findAliveNeighbors(game, coord);
-  const nextRoundCellState = computeIsCellAliveNextRound(
-    game[coord.x][coord.y],
-    aliveNeighbors
+// export const computeAllNeighbors = (aliveCells: Cells) => {
+//     const allNeighbors = aliveCells.map()
+// }
+
+export const computeIsCellAlive = (
+  currentCell: Coord,
+  aliveCells: Cells
+): boolean => {
+  let aliveNeighborsAmount: number = findAliveNeighborsAmount(
+    currentCell,
+    aliveCells
   );
+  //   const nextRoundCellState = computeIsCellAliveNextRound(
+  //     game[coord.x][coord.y],
+  //     aliveNeighbors
+  //   );
 
   return nextRoundCellState;
 };
