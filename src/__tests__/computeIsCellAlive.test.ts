@@ -2,9 +2,14 @@ import { Coord, Cells, Cell } from "../game-of-life";
 import {
   computeIsCellAlive,
   computeIsCellAliveNextRound,
+  computeNextGeneration,
   findAliveNeighborsAmount,
+  findAllConcernedCandidates,
   findCellNeighbors,
 } from "../utils/computeIsCellAlive";
+
+const equalSet = <T>(xs: Set<T>, ys: Set<T>) =>
+  xs.size === ys.size && [...xs].every((x) => ys.has(x));
 
 describe("Find alive neighbors amount", () => {
   it("Should find no alive neighor", () => {
@@ -37,7 +42,7 @@ describe("Find alive neighbors amount", () => {
     expect(aliveNeighborsAmount).toEqual(1);
   });
 
-  it("Should find one alive neighor", () => {
+  it("Should find one alive neighor with negative coord", () => {
     // Given
     const currentCell: Coord = { x: 0, y: 0 };
     const aliveCells: Cells = new Set<Cell>(["0|-1"]);
@@ -169,177 +174,114 @@ describe("Compute is cell alive on next iteration", () => {
   });
 });
 
-describe("Find a cell's neighbors", () => {
-  it("Should find all cell's neighbors", () => {
+describe("Find all candidates", () => {
+  it("Should find 9 candidates for 0|0", () => {
     // Given
-    const currentCell: Coord = { x: 0, y: 0 };
-    const mySortMethod = (a: Coord, b: Coord) => a.x + a.y - b.x + b.y;
+    const aliveCells: Cells = new Set<Cell>(["0|0"]);
 
     // When
-    const neighbors = findCellNeighbors(currentCell);
+    const allCandidates = findAllConcernedCandidates(aliveCells);
+    const expectedCandidates = new Set<Cell>([
+      "0|1",
+      "0|0",
+      "0|-1",
+      "1|1",
+      "1|0",
+      "1|-1",
+      "-1|1",
+      "-1|0",
+      "-1|-1",
+    ]);
 
     // Then
-    const expectedArray = [
-      { x: 1, y: 1 },
-      { x: 1, y: 0 },
-      { x: 1, y: -1 },
-      { x: 0, y: 1 },
-      { x: 0, y: -1 },
-      { x: -1, y: 1 },
-      { x: -1, y: 0 },
-      { x: -1, y: -1 },
-    ];
-    expect(neighbors.sort(mySortMethod)).toEqual(
-      expectedArray.sort(mySortMethod)
-    );
+    expect(equalSet(allCandidates, expectedCandidates)).toEqual(true);
+  });
+
+  it("Should find 9 candidates for 1|1", () => {
+    // Given
+    const aliveCells: Cells = new Set<Cell>(["1|1"]);
+
+    // When
+    const allCandidates = findAllConcernedCandidates(aliveCells);
+    const expectedCandidates = new Set<Cell>([
+      "1|0",
+      "1|1",
+      "1|2",
+      "0|0",
+      "0|1",
+      "0|2",
+      "2|0",
+      "2|1",
+      "2|2",
+    ]);
+
+    // Then
+    expect(equalSet(allCandidates, expectedCandidates)).toEqual(true);
+  });
+
+  it("Should find 9 candidates for 1|1 and 2|2", () => {
+    // Given
+    const aliveCells: Cells = new Set<Cell>(["1|1", "2|2"]);
+
+    // When
+    const allCandidates = findAllConcernedCandidates(aliveCells);
+    const expectedCandidates = new Set<Cell>([
+      "0|0",
+      "0|1",
+      "0|2",
+      "1|0",
+      "1|1",
+      "1|2",
+      "1|3",
+      "2|0",
+      "2|1",
+      "2|2",
+      "2|3",
+      "3|1",
+      "3|2",
+      "3|3",
+    ]);
+
+    // Then
+    expect(equalSet(allCandidates, expectedCandidates)).toEqual(true);
   });
 });
 
-// describe("Compute classic cell state", () => {
-//   it("Should die when it has less than 2 alive neighbors", () => {
-//     // Given
-//     const currentCell: Coord = { x: 0, y: 0 };
-//     const aliveCells: AliveCells = new Set<Cell>(["0|0"]);
+describe("Compute next generation", () => {
+  it("Should compute next gen 1", () => {
+    // Given
+    const currentAliveCells = new Set<Cell>(["0|0", "0|1", "1|0"]);
 
-//     // When
-//     const cellIsAlive = computeIsCellAlive(currentCell, aliveCells);
+    // When
+    const nextGeneration = computeNextGeneration(currentAliveCells);
 
-//     // Then
-//     expect(cellIsAlive).toEqual(false);
-//   });
+    // Then
+    const expectedNextGeneration = new Set<Cell>(["0|0", "0|1", "1|0", "1|1"]);
+    expect(equalSet(expectedNextGeneration, nextGeneration)).toEqual(true);
+  });
 
-//   it("Should live when it has 2 alive neighbors", () => {
-//     // Given
-//     const game: Game = [
-//       [dead, alive, dead],
-//       [dead, alive, dead],
-//       [dead, alive, dead],
-//     ];
-//     const coord: Coord = {
-//       x: 1,
-//       y: 1,
-//     };
+  it("Should compute next gen 2", () => {
+    // Given
+    const currentAliveCells = new Set<Cell>([
+      "0|0",
+      "0|1",
+      "0|2",
+      "-1|1",
+      "1|2",
+    ]);
 
-//     // When
-//     const cellIsAlive = computeIsCellAlive(game, coord);
+    // When
+    const nextGeneration = computeNextGeneration(currentAliveCells);
 
-//     // Then
-//     expect(cellIsAlive).toEqual(true);
-//   });
-
-//   it("Should live when it has 2 other alive neighbors", () => {
-//     // Given
-//     const game: Game = [
-//       [alive, dead, dead],
-//       [dead, alive, dead],
-//       [dead, dead, alive],
-//     ];
-//     const coord: Coord = {
-//       x: 1,
-//       y: 1,
-//     };
-
-//     // When
-//     const cellIsAlive = computeIsCellAlive(game, coord);
-
-//     // Then
-//     expect(cellIsAlive).toEqual(true);
-//   });
-
-//   it("Should live when it has 3 other alive neighbors", () => {
-//     // Given
-//     const game: Game = [
-//       [alive, dead, alive],
-//       [dead, alive, dead],
-//       [dead, dead, alive],
-//     ];
-//     const coord: Coord = {
-//       x: 1,
-//       y: 1,
-//     };
-
-//     // When
-//     const cellIsAlive = computeIsCellAlive(game, coord);
-
-//     // Then
-//     expect(cellIsAlive).toEqual(true);
-//   });
-
-//   it("Should die when it has 4 or more alive neighbors", () => {
-//     // Given
-//     const game: Game = [
-//       [alive, dead, alive],
-//       [alive, alive, dead],
-//       [dead, dead, alive],
-//     ];
-//     const coord: Coord = {
-//       x: 1,
-//       y: 1,
-//     };
-
-//     // When
-//     const cellIsAlive = computeIsCellAlive(game, coord);
-
-//     // Then
-//     expect(cellIsAlive).toEqual(false);
-//   });
-
-//   it("Should revive when it is dead and has exactly 3 neighbors", () => {
-//     // Given
-//     const game: Game = [
-//       [alive, dead, alive],
-//       [alive, dead, dead],
-//       [dead, dead, dead],
-//     ];
-//     const coord: Coord = {
-//       x: 1,
-//       y: 1,
-//     };
-
-//     // When
-//     const cellIsAlive = computeIsCellAlive(game, coord);
-
-//     // Then
-//     expect(cellIsAlive).toEqual(true);
-//   });
-
-//   it("Should not revive when it is dead and has exactly 2 alive neighbors", () => {
-//     // Given
-//     const game: Game = [
-//       [alive, dead, dead],
-//       [alive, dead, dead],
-//       [dead, dead, dead],
-//     ];
-//     const coord: Coord = {
-//       x: 1,
-//       y: 1,
-//     };
-
-//     // When
-//     const cellIsAlive = computeIsCellAlive(game, coord);
-
-//     // Then
-//     expect(cellIsAlive).toEqual(false);
-//   });
-// });
-
-// describe("Edge cases", () => {
-//   it("Should die when it has less than 2 alive neighbors", () => {
-//     // Given
-//     const game: Game = [
-//       [alive, dead, dead],
-//       [dead, dead, dead],
-//       [dead, dead, dead],
-//     ];
-//     const coord: Coord = {
-//       x: 0,
-//       y: 0,
-//     };
-
-//     // When
-//     const cellIsAlive = computeIsCellAlive(game, coord);
-
-//     // Then
-//     expect(cellIsAlive).toEqual(false);
-//   });
-// });
+    // Then
+    const expectedNextGeneration = new Set<Cell>([
+      "0|0",
+      "-1|0",
+      "-1|1",
+      "-1|2",
+      "0|2",
+      "1|2",
+    ]);
+    expect(equalSet(expectedNextGeneration, nextGeneration)).toEqual(true);
+  });
+});

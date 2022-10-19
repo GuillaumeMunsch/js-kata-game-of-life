@@ -1,4 +1,5 @@
 import { Coord, DeltaCoord, Cells, Cell } from "../game-of-life";
+import { cellToCoord, coordToCell } from "./transforms";
 
 export const computeIsCellAliveNextRound = (
   isCurrentCellAlive: boolean,
@@ -23,8 +24,6 @@ const computeNeighborCoord =
     y: currentCell.y + delta.dy,
   });
 
-//   .map<Cell>(({ x, y }) => `${x}|${y}`
-
 export const findCellNeighbors = (currentCell: Coord): Coord[] =>
   deltas.map((delta) => computeNeighborCoord(currentCell)(delta));
 
@@ -39,22 +38,28 @@ export const findAliveNeighborsAmount = (
   return aliveNeighbors.length;
 };
 
-// export const computeAllNeighbors = (aliveCells: Cells) => {
-//     const allNeighbors = aliveCells.map()
-// }
-
-export const computeIsCellAlive = (
-  currentCell: Coord,
-  aliveCells: Cells
-): boolean => {
-  let aliveNeighborsAmount: number = findAliveNeighborsAmount(
-    currentCell,
-    aliveCells
+export const findAllConcernedCandidates = (
+  currentAliveCells: Set<Cell>
+): Set<Cell> =>
+  new Set(
+    Array.from(currentAliveCells)
+      .map((cell) => [
+        ...findCellNeighbors(cellToCoord(cell)),
+        cellToCoord(cell),
+      ])
+      .flat()
+      .map(coordToCell)
   );
-  //   const nextRoundCellState = computeIsCellAliveNextRound(
-  //     game[coord.x][coord.y],
-  //     aliveNeighbors
-  //   );
 
-  return nextRoundCellState;
+export const computeNextGeneration = (aliveCells: Cells): Cells => {
+  const concernedCandidates = findAllConcernedCandidates(aliveCells);
+  const nextGeneration = Array.from(concernedCandidates).filter((cell) => {
+    const cellNeighborsAmount = findAliveNeighborsAmount(
+      cellToCoord(cell),
+      aliveCells
+    );
+    const isCurrentCellAlive = aliveCells.has(cell);
+    return computeIsCellAliveNextRound(isCurrentCellAlive, cellNeighborsAmount);
+  });
+  return new Set(nextGeneration);
 };
