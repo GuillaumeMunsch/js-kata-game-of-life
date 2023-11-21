@@ -34,7 +34,7 @@ export const findAliveNeighborsAmount = (currentCell: Coord, grid: Grid): number
 };
 
 export const findAllConcernedCandidates = (grid: Grid): Grid =>
-  grid.enhancedMap((coord) => [...findCellNeighbors(coord), coord]);
+  grid.map((coord) => [...findCellNeighbors(coord), coord]);
 
 export const computeNextGeneration = (aliveGrid: Grid): Grid => {
   const concernedCandidates = findAllConcernedCandidates(aliveGrid);
