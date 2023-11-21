@@ -1,7 +1,6 @@
-import React from 'react';
-import logo from './logo.svg';
-import GameOfLife from './game-of-life';
-import './App.css';
+import React from "react";
+import GameOfLife from "./game-of-life";
+import "./App.css";
 
 function App() {
   return (

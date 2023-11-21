@@ -1,27 +1,20 @@
-import { Coord, Cells, Cell } from "../game-of-life";
+import { Coord } from "../game-of-life";
 import {
-  computeIsCellAlive,
   computeIsCellAliveNextRound,
   computeNextGeneration,
   findAliveNeighborsAmount,
   findAllConcernedCandidates,
-  findCellNeighbors,
 } from "../utils/computeIsCellAlive";
-
-const equalSet = <T>(xs: Set<T>, ys: Set<T>) =>
-  xs.size === ys.size && [...xs].every((x) => ys.has(x));
+import Grid from "../utils/grid";
 
 describe("Find alive neighbors amount", () => {
   it("Should find no alive neighor", () => {
     // Given
     const currentCell: Coord = { x: 0, y: 0 };
-    const aliveCells: Cells = new Set<Cell>(["0|0"]);
+    const grid: Grid = new Grid([{ x: 0, y: 0 }]);
 
     // When
-    const aliveNeighborsAmount = findAliveNeighborsAmount(
-      currentCell,
-      aliveCells
-    );
+    const aliveNeighborsAmount = findAliveNeighborsAmount(currentCell, grid);
 
     // Then
     expect(aliveNeighborsAmount).toEqual(0);
@@ -30,13 +23,10 @@ describe("Find alive neighbors amount", () => {
   it("Should find one alive neighor", () => {
     // Given
     const currentCell: Coord = { x: 0, y: 0 };
-    const aliveCells: Cells = new Set<Cell>(["1|0"]);
+    const grid: Grid = new Grid([{ x: 1, y: 0 }]);
 
     // When
-    const aliveNeighborsAmount = findAliveNeighborsAmount(
-      currentCell,
-      aliveCells
-    );
+    const aliveNeighborsAmount = findAliveNeighborsAmount(currentCell, grid);
 
     // Then
     expect(aliveNeighborsAmount).toEqual(1);
@@ -45,13 +35,10 @@ describe("Find alive neighbors amount", () => {
   it("Should find one alive neighor with negative coord", () => {
     // Given
     const currentCell: Coord = { x: 0, y: 0 };
-    const aliveCells: Cells = new Set<Cell>(["0|-1"]);
+    const grid: Grid = new Grid([{ x: 0, y: -1 }]);
 
     // When
-    const aliveNeighborsAmount = findAliveNeighborsAmount(
-      currentCell,
-      aliveCells
-    );
+    const aliveNeighborsAmount = findAliveNeighborsAmount(currentCell, grid);
 
     // Then
     expect(aliveNeighborsAmount).toEqual(1);
@@ -60,22 +47,19 @@ describe("Find alive neighbors amount", () => {
   it("Should find 8 alive neighors", () => {
     // Given
     const currentCell: Coord = { x: 0, y: 0 };
-    const aliveCells: Cells = new Set<Cell>([
-      "0|1",
-      "0|-1",
-      "1|-1",
-      "1|0",
-      "1|1",
-      "-1|1",
-      "-1|0",
-      "-1|-1",
+    const grid: Grid = new Grid([
+      { x: 0, y: 1 },
+      { x: 0, y: -1 },
+      { x: 1, y: -1 },
+      { x: 1, y: 0 },
+      { x: 1, y: 1 },
+      { x: -1, y: 1 },
+      { x: -1, y: 0 },
+      { x: -1, y: -1 },
     ]);
 
     // When
-    const aliveNeighborsAmount = findAliveNeighborsAmount(
-      currentCell,
-      aliveCells
-    );
+    const aliveNeighborsAmount = findAliveNeighborsAmount(currentCell, grid);
 
     // Then
     expect(aliveNeighborsAmount).toEqual(8);
@@ -84,13 +68,15 @@ describe("Find alive neighbors amount", () => {
   it("Should find 1 alive neighors", () => {
     // Given
     const currentCell: Coord = { x: 0, y: 0 };
-    const aliveCells: Cells = new Set<Cell>(["0|1", "10|-1", "2|0", "0|0"]);
+    const grid = new Grid([
+      { x: 0, y: 1 },
+      { x: 10, y: -1 },
+      { x: 2, y: 0 },
+      { x: 0, y: 0 },
+    ]);
 
     // When
-    const aliveNeighborsAmount = findAliveNeighborsAmount(
-      currentCell,
-      aliveCells
-    );
+    const aliveNeighborsAmount = findAliveNeighborsAmount(currentCell, grid);
 
     // Then
     expect(aliveNeighborsAmount).toEqual(1);
@@ -177,111 +163,124 @@ describe("Compute is cell alive on next iteration", () => {
 describe("Find all candidates", () => {
   it("Should find 9 candidates for 0|0", () => {
     // Given
-    const aliveCells: Cells = new Set<Cell>(["0|0"]);
+    const grid: Grid = new Grid([{ x: 0, y: 0 }]);
 
     // When
-    const allCandidates = findAllConcernedCandidates(aliveCells);
-    const expectedCandidates = new Set<Cell>([
-      "0|1",
-      "0|0",
-      "0|-1",
-      "1|1",
-      "1|0",
-      "1|-1",
-      "-1|1",
-      "-1|0",
-      "-1|-1",
+    const allCandidates = findAllConcernedCandidates(grid);
+    const expectedCandidates = new Grid([
+      { x: -1, y: -1 },
+      { x: -1, y: 0 },
+      { x: -1, y: 1 },
+      { x: 0, y: -1 },
+      { x: 0, y: 1 },
+      { x: 1, y: -1 },
+      { x: 1, y: 0 },
+      { x: 1, y: 1 },
+      { x: 0, y: 0 },
     ]);
 
     // Then
-    expect(equalSet(allCandidates, expectedCandidates)).toEqual(true);
+    expect(allCandidates.equals(expectedCandidates)).toEqual(true);
   });
 
   it("Should find 9 candidates for 1|1", () => {
     // Given
-    const aliveCells: Cells = new Set<Cell>(["1|1"]);
+    const aliveCells = new Grid([{ x: 1, y: 1 }]);
 
     // When
     const allCandidates = findAllConcernedCandidates(aliveCells);
-    const expectedCandidates = new Set<Cell>([
-      "1|0",
-      "1|1",
-      "1|2",
-      "0|0",
-      "0|1",
-      "0|2",
-      "2|0",
-      "2|1",
-      "2|2",
+    const expectedCandidates = new Grid([
+      { x: 1, y: 0 },
+      { x: 1, y: 1 },
+      { x: 1, y: 2 },
+      { x: 0, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: 2 },
+      { x: 2, y: 0 },
+      { x: 2, y: 1 },
+      { x: 2, y: 2 },
     ]);
 
     // Then
-    expect(equalSet(allCandidates, expectedCandidates)).toEqual(true);
+    expect(allCandidates.equals(expectedCandidates)).toEqual(true);
   });
 
   it("Should find 9 candidates for 1|1 and 2|2", () => {
     // Given
-    const aliveCells: Cells = new Set<Cell>(["1|1", "2|2"]);
+    const aliveCells = new Grid([
+      { x: 1, y: 1 },
+      { x: 2, y: 2 },
+    ]);
 
     // When
     const allCandidates = findAllConcernedCandidates(aliveCells);
-    const expectedCandidates = new Set<Cell>([
-      "0|0",
-      "0|1",
-      "0|2",
-      "1|0",
-      "1|1",
-      "1|2",
-      "1|3",
-      "2|0",
-      "2|1",
-      "2|2",
-      "2|3",
-      "3|1",
-      "3|2",
-      "3|3",
+    const expectedCandidates = new Grid([
+      { x: 0, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: 2 },
+      { x: 1, y: 0 },
+      { x: 1, y: 1 },
+      { x: 1, y: 2 },
+      { x: 1, y: 3 },
+      { x: 2, y: 0 },
+      { x: 2, y: 1 },
+      { x: 2, y: 2 },
+      { x: 2, y: 3 },
+      { x: 3, y: 1 },
+      { x: 3, y: 2 },
+      { x: 3, y: 3 },
     ]);
 
     // Then
-    expect(equalSet(allCandidates, expectedCandidates)).toEqual(true);
+    expect(allCandidates.equals(expectedCandidates)).toEqual(true);
   });
 });
 
 describe("Compute next generation", () => {
   it("Should compute next gen 1", () => {
     // Given
-    const currentAliveCells = new Set<Cell>(["0|0", "0|1", "1|0"]);
+    const currentAliveCells = new Grid([
+      { x: 0, y: 0 },
+      { x: 0, y: 1 },
+      { x: 1, y: 0 },
+    ]);
 
     // When
     const nextGeneration = computeNextGeneration(currentAliveCells);
 
     // Then
-    const expectedNextGeneration = new Set<Cell>(["0|0", "0|1", "1|0", "1|1"]);
-    expect(equalSet(expectedNextGeneration, nextGeneration)).toEqual(true);
+    const expectedNextGeneration = new Grid([
+      { x: 0, y: 1 },
+      { x: 1, y: 0 },
+      { x: 1, y: 1 },
+      { x: 0, y: 0 },
+    ]);
+
+    expect(nextGeneration.equals(expectedNextGeneration)).toEqual(true);
   });
 
   it("Should compute next gen 2", () => {
     // Given
-    const currentAliveCells = new Set<Cell>([
-      "0|0",
-      "0|1",
-      "0|2",
-      "-1|1",
-      "1|2",
+    const currentAliveCells = new Grid([
+      { x: 0, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: 2 },
+      { x: -1, y: 1 },
+      { x: 1, y: 2 },
     ]);
 
     // When
     const nextGeneration = computeNextGeneration(currentAliveCells);
 
     // Then
-    const expectedNextGeneration = new Set<Cell>([
-      "0|0",
-      "-1|0",
-      "-1|1",
-      "-1|2",
-      "0|2",
-      "1|2",
+    const expectedNextGeneration = new Grid([
+      { x: 0, y: 0 },
+      { x: -1, y: 0 },
+      { x: -1, y: 1 },
+      { x: -1, y: 2 },
+      { x: 0, y: 2 },
+      { x: 1, y: 2 },
     ]);
-    expect(equalSet(expectedNextGeneration, nextGeneration)).toEqual(true);
+    expect(nextGeneration.equals(expectedNextGeneration)).toEqual(true);
   });
 });

@@ -1,5 +1,5 @@
-import { Coord, DeltaCoord, Cells, Cell } from "../game-of-life";
-import { cellToCoord, coordToCell } from "./transforms";
+import { Coord, DeltaCoord } from "../game-of-life";
+import Grid from "./grid";
 
 export const computeIsCellAliveNextRound = (
   isCurrentCellAlive: boolean,
@@ -27,39 +27,20 @@ const computeNeighborCoord =
 export const findCellNeighbors = (currentCell: Coord): Coord[] =>
   deltas.map((delta) => computeNeighborCoord(currentCell)(delta));
 
-export const findAliveNeighborsAmount = (
-  currentCell: Coord,
-  aliveCells: Cells
-): number => {
+export const findAliveNeighborsAmount = (currentCell: Coord, grid: Grid): number => {
   const neighbors = findCellNeighbors(currentCell);
-  const aliveNeighbors = neighbors.filter(
-    ({ x, y }) => !!aliveCells.has(`${x}|${y}`)
-  );
+  const aliveNeighbors = neighbors.filter(grid.has);
   return aliveNeighbors.length;
 };
 
-export const findAllConcernedCandidates = (
-  currentAliveCells: Set<Cell>
-): Set<Cell> =>
-  new Set(
-    Array.from(currentAliveCells)
-      .map((cell) => [
-        ...findCellNeighbors(cellToCoord(cell)),
-        cellToCoord(cell),
-      ])
-      .flat()
-      .map(coordToCell)
-  );
+export const findAllConcernedCandidates = (grid: Grid): Grid =>
+  grid.enhancedMap((coord) => [...findCellNeighbors(coord), coord]);
 
-export const computeNextGeneration = (aliveCells: Cells): Cells => {
-  const concernedCandidates = findAllConcernedCandidates(aliveCells);
-  const nextGeneration = Array.from(concernedCandidates).filter((cell) => {
-    const cellNeighborsAmount = findAliveNeighborsAmount(
-      cellToCoord(cell),
-      aliveCells
-    );
-    const isCurrentCellAlive = aliveCells.has(cell);
+export const computeNextGeneration = (aliveGrid: Grid): Grid => {
+  const concernedCandidates = findAllConcernedCandidates(aliveGrid);
+  return concernedCandidates.filter((cell) => {
+    const cellNeighborsAmount = findAliveNeighborsAmount(cell, aliveGrid);
+    const isCurrentCellAlive = aliveGrid.has(cell);
     return computeIsCellAliveNextRound(isCurrentCellAlive, cellNeighborsAmount);
   });
-  return new Set(nextGeneration);
 };
